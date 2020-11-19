@@ -29,5 +29,8 @@
     "better-sqlite3": "7.1.1",
     "ava": "3.13.0",
     "express-session": "1.17.1"
+  },
+  "dependencies": {
+    "date-fns": "2.16.1"
   }
 }
