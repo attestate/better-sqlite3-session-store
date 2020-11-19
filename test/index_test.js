@@ -66,7 +66,8 @@ test("if it saves a new session record", t => {
   t.assert(dbSess.sess === JSON.stringify(sess));
   t.assert(dbSess.sid === sid);
   t.assert(
-    differenceInSeconds(new Date(dbSess.expire), new Date()) >= sess.cookie.maxAge - 5
+    differenceInSeconds(new Date(dbSess.expire), new Date()) >=
+      sess.cookie.maxAge - 5
   );
 
   t.teardown(teardown);
@@ -89,7 +90,8 @@ test("if it overwrites an already-existing session", t => {
   t.assert(dbSess.sess === JSON.stringify(sess));
   t.assert(dbSess.sid === sid);
   t.assert(
-    differenceInSeconds(new Date(dbSess.expire), new Date()) >= sess.cookie.maxAge - 5
+    differenceInSeconds(new Date(dbSess.expire), new Date()) >=
+      sess.cookie.maxAge - 5
   );
 
   const sess2 = { cookie: { maxAge: 5000 }, name: "replaced name" };
@@ -101,7 +103,8 @@ test("if it overwrites an already-existing session", t => {
   t.assert(dbSess2.sess === JSON.stringify(sess2));
   t.assert(dbSess2.sid === sid);
   t.assert(
-    differenceInSeconds(new Date(dbSess2.expire), new Date()) >= sess2.cookie.maxAge - 5
+    differenceInSeconds(new Date(dbSess2.expire), new Date()) >=
+      sess2.cookie.maxAge - 5
   );
 
   t.teardown(teardown);
@@ -131,3 +134,63 @@ test("if it saves a session with a missing maxAge too", t => {
   t.teardown(teardown);
 });
 
+test("if get method returns null when no session was found", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  s.get("non-existent", (err, res) => {
+    t.assert(!err);
+    t.assert(res === null);
+  });
+
+  t.teardown(teardown);
+});
+
+test("if an expired session is ignored when trying to get a session", async t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  // NOTE: Session expires immediately with maxAge being 1 second.
+  const sess = { cookie: { maxAge: 1 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  // NOTE: Wait 2 sec to make sure that session is expired.
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  s.get(sid, (err, res) => {
+    t.assert(!err);
+    console.log(res);
+    t.assert(res === null);
+  });
+
+  t.teardown(teardown);
+});
+
+test("if an active session is retrieved when calling get", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  s.get(sid, (err, dbSess) => {
+    t.assert(!err);
+    t.deepEqual(sess, dbSess);
+  });
+
+  t.teardown(teardown);
+});

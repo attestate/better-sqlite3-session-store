@@ -42,9 +42,11 @@ module.exports = ({ Store }) => {
 
       const now = new Date();
       const expire = add(now, { seconds: age }).toISOString();
-      const entry = { sid, sess: JSON.stringify(sess), expire};
+      const entry = { sid, sess: JSON.stringify(sess), expire };
 
-      const q = this.client.prepare(`
+      const q = this.client
+        .prepare(
+          `
         INSERT OR REPLACE INTO 
           ${tableName}
         VALUES
@@ -53,9 +55,29 @@ module.exports = ({ Store }) => {
             @sess,
             @expire
           )
-      `).run(entry);
+      `
+        )
+        .run(entry);
 
       cb(null, q);
+    }
+
+    get(sid, cb) {
+      const res = this.client
+        .prepare(
+          `
+        SELECT sess 
+        FROM ${tableName} 
+        WHERE sid = @sid AND datetime('now') < datetime(expire)
+      `
+        )
+        .get({ sid });
+
+      if (res && res.sess) {
+        cb(null, JSON.parse(res.sess));
+      } else {
+        cb(null, null);
+      }
     }
   }
 
