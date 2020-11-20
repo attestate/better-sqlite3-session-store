@@ -227,3 +227,27 @@ test("if non-existent session can be destroyed without throwing an error too", t
     t.assert(res);
   });
 });
+
+test("if counting all sessions is possible", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  s.length((err, res) => {
+    t.assert(typeof res === "number");
+    t.assert(res === 0);
+  });
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  s.length((err, res) => {
+    t.assert(typeof res === "number");
+    t.assert(res === 1);
+  });
+});

@@ -72,15 +72,15 @@ module.exports = ({ Store }) => {
 
       try {
         res = this.client
-        .prepare(
-          `
+          .prepare(
+            `
         SELECT sess 
         FROM ${tableName} 
         WHERE sid = @sid AND datetime('now') < datetime(expire)
       `
-        )
-        .get({ sid });
-      } catch(err) {
+          )
+          .get({ sid });
+      } catch (err) {
         cb(err);
       }
 
@@ -95,14 +95,36 @@ module.exports = ({ Store }) => {
       let res;
 
       try {
-        res = this.client.prepare(`
+        res = this.client
+          .prepare(
+            `
           DELETE FROM ${tableName} WHERE sid = ?
-        `).run(sid);
-      } catch(err) {
+        `
+          )
+          .run(sid);
+      } catch (err) {
         cb(err);
       }
 
       cb(null, res);
+    }
+
+    length(cb) {
+      let res;
+
+      try {
+        res = this.client
+          .prepare(
+            `
+          SELECT COUNT(*) as count FROM ${tableName}
+        `
+          )
+          .get();
+      } catch (err) {
+        cb(err);
+      }
+
+      cb(null, res.count);
     }
   }
 
