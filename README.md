@@ -4,9 +4,30 @@
 > [better-sqlite3](https://github.com/JoshuaWise/better-sqlite3/) session
 > storage for [express-session](https://github.com/expressjs/session).
 
-## Completeness
+## Usage
 
-This is a work in progress.
+```js
+const sqlite = require("better-sqlite3");
+const session = require('express-session')
+
+// TODO: Finalize npm name
+const SqliteStore = require('connect-better-sqlite3')(session)
+const db = new sqlite("sessions.db", { verbose: console.log });
+
+app.use(
+  session({
+    store: new SqliteStore({
+			client: db, 
+			expired: {
+				clear: true,
+				intervalMs: 900000 //ms = 15min
+			}
+		}),
+    secret: 'keyboard cat',
+    resave: false,
+  })
+)
+```
 
 ## License
 
