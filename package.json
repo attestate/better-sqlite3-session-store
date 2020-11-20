@@ -1,5 +1,5 @@
 {
-  "name": "connect-better-sqlite3",
+  "name": "better-sqlite3-session-store",
   "version": "0.0.1",
   "description": "A session store for express-session.",
   "main": "src/index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TimDaub/connect-better-sqlite3.git"
+    "url": "git+https://github.com/TimDaub/better-sqlite3-session-store.git"
   },
   "keywords": [
     "express",
@@ -22,9 +22,9 @@
   "author": "Tim Daubenschütz <tim@daubenschuetz.de> (https://timdaub.github.io)",
   "license": "GPL-3.0-only",
   "bugs": {
-    "url": "https://github.com/TimDaub/connect-better-sqlite3/issues"
+    "url": "https://github.com/TimDaub/better-sqlite3-session-store/issues"
   },
-  "homepage": "https://github.com/TimDaub/connect-better-sqlite3#readme",
+  "homepage": "https://github.com/TimDaub/better-sqlite3-session-store#readme",
   "devDependencies": {
     "better-sqlite3": "7.1.1",
     "ava": "3.13.0",
