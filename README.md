@@ -18,7 +18,6 @@ $ npm i --save better-sqlite3-session-store
 const sqlite = require("better-sqlite3");
 const session = require("express-session")
 
-// TODO: Finalize npm name
 const SqliteStore = require("better-sqlite3-session-store")(session)
 const db = new sqlite("sessions.db", { verbose: console.log });
 
