@@ -6,6 +6,12 @@
 > [better-sqlite3](https://github.com/JoshuaWise/better-sqlite3/) session
 > storage for [express-session](https://github.com/expressjs/session).
 
+## Install
+
+```bash
+$ npm i --save better-sqlite3-session-store
+```
+
 ## Usage
 
 ```js
