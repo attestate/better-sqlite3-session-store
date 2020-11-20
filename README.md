@@ -8,22 +8,22 @@
 
 ```js
 const sqlite = require("better-sqlite3");
-const session = require('express-session')
+const session = require("express-session")
 
 // TODO: Finalize npm name
-const SqliteStore = require('connect-better-sqlite3')(session)
+const SqliteStore = require("connect-better-sqlite3")(session)
 const db = new sqlite("sessions.db", { verbose: console.log });
 
 app.use(
   session({
     store: new SqliteStore({
-			client: db, 
-			expired: {
-				clear: true,
-				intervalMs: 900000 //ms = 15min
-			}
-		}),
-    secret: 'keyboard cat',
+      client: db, 
+      expired: {
+        clear: true,
+        intervalMs: 900000 //ms = 15min
+      }
+    }),
+    secret: "keyboard cat",
     resave: false,
   })
 )
