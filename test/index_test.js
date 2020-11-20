@@ -2,7 +2,7 @@
 const test = require("ava").serial;
 const sqlite = require("better-sqlite3");
 const session = require("express-session");
-const { unlinkSync } = require("fs");
+const { unlinkSync, existsSync } = require("fs");
 const differenceInSeconds = require("date-fns/differenceInSeconds");
 
 const SqliteStore = require("../src/index.js")(session);
@@ -12,7 +12,19 @@ const dbOptions = {
   verbose: console.log
 };
 
-const teardown = () => unlinkSync(dbName);
+const teardown = () => {
+  try {
+    unlinkSync(dbName);
+  } catch (err) {
+    if (!existsSync(dbName)) {
+      //noop
+    } else {
+      throw err;
+    }
+  }
+};
+
+test.afterEach(teardown);
 
 test("if initializing store works", t => {
   const db = new sqlite(dbName, dbOptions);
@@ -24,8 +36,6 @@ test("if initializing store works", t => {
   t.assert(sid.name === "sid" && sid.type === "TEXT");
   t.assert(sess.name === "sess" && sess.type === "JSON");
   t.assert(expire.name === "expire" && expire.type === "TEXT");
-
-  t.teardown(teardown);
 });
 
 test("if initialization can be run twice without any errors", t => {
@@ -41,8 +51,6 @@ test("if initialization can be run twice without any errors", t => {
   t.assert(sid.name === "sid" && sid.type === "TEXT");
   t.assert(sess.name === "sess" && sess.type === "JSON");
   t.assert(expire.name === "expire" && expire.type === "TEXT");
-
-  t.teardown(teardown);
 });
 
 test("if error is thrown when client is missing from options", t => {
@@ -69,8 +77,6 @@ test("if it saves a new session record", t => {
     differenceInSeconds(new Date(dbSess.expire), new Date()) >=
       sess.cookie.maxAge - 5
   );
-
-  t.teardown(teardown);
 });
 
 test("if it overwrites an already-existing session", t => {
@@ -106,8 +112,6 @@ test("if it overwrites an already-existing session", t => {
     differenceInSeconds(new Date(dbSess2.expire), new Date()) >=
       sess2.cookie.maxAge - 5
   );
-
-  t.teardown(teardown);
 });
 
 test("if it saves a session with a missing maxAge too", t => {
@@ -130,8 +134,6 @@ test("if it saves a session with a missing maxAge too", t => {
   t.assert(
     differenceInSeconds(new Date(dbSess.expire), new Date()) >= oneDayAge - 5
   );
-
-  t.teardown(teardown);
 });
 
 test("if get method returns null when no session was found", t => {
@@ -144,8 +146,6 @@ test("if get method returns null when no session was found", t => {
     t.assert(!err);
     t.assert(res === null);
   });
-
-  t.teardown(teardown);
 });
 
 test("if an expired session is ignored when trying to get a session", async t => {
@@ -170,8 +170,6 @@ test("if an expired session is ignored when trying to get a session", async t =>
     console.log(res);
     t.assert(res === null);
   });
-
-  t.teardown(teardown);
 });
 
 test("if an active session is retrieved when calling get", t => {
@@ -191,6 +189,41 @@ test("if an active session is retrieved when calling get", t => {
     t.assert(!err);
     t.deepEqual(sess, dbSess);
   });
+});
 
-  t.teardown(teardown);
+test("if a session is destroyed", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  s.destroy(sid, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const { numOfSessions } = db
+    .prepare("SELECT COUNT(*) as numOfSessions FROM sessions")
+    .get();
+  t.assert(numOfSessions === 0);
+});
+
+test("if non-existent session can be destroyed without throwing an error too", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+  const sid = "123";
+
+  s.destroy(sid, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
 });

@@ -90,6 +90,20 @@ module.exports = ({ Store }) => {
         cb(null, null);
       }
     }
+
+    destroy(sid, cb) {
+      let res;
+
+      try {
+        res = this.client.prepare(`
+          DELETE FROM ${tableName} WHERE sid = ?
+        `).run(sid);
+      } catch(err) {
+        cb(err);
+      }
+
+      cb(null, res);
+    }
   }
 
   return SqliteStore;
