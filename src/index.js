@@ -126,6 +126,44 @@ module.exports = ({ Store }) => {
 
       cb(null, res.count);
     }
+
+    clear(cb) {
+      let res;
+
+      try {
+        res = this.client.prepare(`DELETE FROM ${tableName}`).run();
+      } catch (err) {
+        cb(err);
+      }
+
+      cb(null, res);
+    }
+
+    touch(sid, sess, cb) {
+      const entry = { sid };
+      if (sess && sess.cookie && sess.cookie.expires) {
+        entry.expire = new Date(sess.cookie.expires).toISOString();
+      } else {
+        entry.expire = add(new Date(), { seconds: oneDay }).toISOString();
+      }
+
+      let res;
+      try {
+        res = this.client
+          .prepare(
+            `
+        UPDATE ${tableName}
+        SET expire = @expire
+        WHERE sid = @sid AND datetime('now') < datetime(expire)
+      `
+          )
+          .run(entry);
+      } catch (err) {
+        cb(err);
+      }
+
+      cb(null, res);
+    }
   }
 
   return SqliteStore;

@@ -4,6 +4,7 @@ const sqlite = require("better-sqlite3");
 const session = require("express-session");
 const { unlinkSync, existsSync } = require("fs");
 const differenceInSeconds = require("date-fns/differenceInSeconds");
+const add = require("date-fns/add");
 
 const SqliteStore = require("../src/index.js")(session);
 
@@ -167,7 +168,6 @@ test("if an expired session is ignored when trying to get a session", async t =>
 
   s.get(sid, (err, res) => {
     t.assert(!err);
-    console.log(res);
     t.assert(res === null);
   });
 });
@@ -250,4 +250,112 @@ test("if counting all sessions is possible", t => {
     t.assert(typeof res === "number");
     t.assert(res === 1);
   });
+});
+
+test("if all sessions can be cleared", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  const sid2 = "456";
+  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+  s.set(sid2, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  s.length((err, count) => t.assert(count === 2));
+  s.clear((err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+  s.length((err, count) => t.assert(count === 0));
+});
+
+test("if session is touched when expires key is present", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const newExpires = add(new Date(), { minutes: 1337 }).toISOString();
+  const sess2 = { cookie: { expires: newExpires }, name: "sample name" };
+  s.touch(sid, sess2, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const res = db.prepare(`SELECT expire FROM sessions WHERE sid = ?`).get(sid);
+  t.assert(new Date(res.expire).toISOString() === newExpires);
+});
+
+test("if an inactive session is ignored when touching", async t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 1 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  // NOTE: Wait 2 sec to make sure that session is expired.
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const newExpires = add(new Date(), { seconds: 1337 }).toISOString();
+  const sess2 = { cookie: { expires: newExpires }, name: "sample name" };
+  s.touch(sid, sess2, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const res = db.prepare(`SELECT expire FROM sessions WHERE sid = ?`).get(sid);
+  t.assert(differenceInSeconds(new Date(), new Date(res.expire)) < 5);
+});
+
+test("that if `expires` is omitted from cookie, a default TTL is used", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db
+  });
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const newExpires = add(new Date(), { minutes: 1337 }).toISOString();
+  const sess2 = { cookie: {}, name: "sample name" };
+  s.touch(sid, sess2, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const res = db.prepare(`SELECT expire FROM sessions WHERE sid = ?`).get(sid);
+  t.assert(
+    Math.abs(
+      differenceInSeconds(
+        new Date(res.expire),
+        add(new Date(), { seconds: 86400 })
+      ) < 5
+    )
+  );
 });
