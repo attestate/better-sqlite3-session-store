@@ -1,5 +1,7 @@
 # better-sqlite3-session-store
 
+[![npm version](https://badge.fury.io/js/better-sqlite3-session-store.svg)](https://badge.fury.io/js/better-sqlite3-session-store) [![workflow status](https://github.com/TimDaub/better-sqlite3-session-store/workflows/Node.js%20CI/badge.svg)](https://github.com/TimDaub/better-sqlite3-session-store/workflows/Node.js%20CI/badge.svg)
+
 > **better-sqlite3-sessions-store** provides a
 > [better-sqlite3](https://github.com/JoshuaWise/better-sqlite3/) session
 > storage for [express-session](https://github.com/expressjs/session).
