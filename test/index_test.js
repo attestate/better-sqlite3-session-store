@@ -359,3 +359,41 @@ test("that if `expires` is omitted from cookie, a default TTL is used", t => {
     )
   );
 });
+
+test("if an expired session is deleted by continously deleting expired sessions", async t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+    expired: {
+      clear: true,
+      intervalMs: 3000
+    }
+  });
+
+  const sid = "123";
+  // NOTE: Session expires immediately with maxAge being 1 second.
+  const sess = { cookie: { maxAge: 1 }, name: "instant expire" };
+  s.set(sid, sess, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  const sid2 = "456";
+  const sess2 = { cookie: { maxAge: 100 }, name: "long expire" };
+  s.set(sid2, sess2, (err, res) => {
+    t.assert(!err);
+    t.assert(res);
+  });
+
+  // NOTE: Wait to make sure that first session is expired.
+  await new Promise(resolve => setTimeout(resolve, 4000));
+
+  s.get(sid, (err, res) => {
+    t.assert(!err);
+    t.assert(res === null);
+  });
+  s.get(sid2, (err, res) => {
+    t.assert(!err);
+    t.deepEqual(sess2, res);
+  });
+});

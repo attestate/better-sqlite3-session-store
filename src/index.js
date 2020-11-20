@@ -3,6 +3,9 @@ const add = require("date-fns/add");
 
 // NOTE: 1d = 86400s
 const oneDay = 86400;
+
+// NOTE: In Milliseconds
+const clearExpiredInterval = 900000;
 const tableName = "sessions";
 const schema = `
   CREATE TABLE IF NOT EXISTS ${tableName}
@@ -21,8 +24,42 @@ module.exports = ({ Store }) => {
       if (!options.client) {
         throw new Error("A client must be directly provided to SqliteStore");
       }
+
+      this.expired = {
+        clear: (options.expired && options.expired.clear) || true,
+        intervalMs:
+          (options.expired && options.expired.intervalMs) ||
+          clearExpiredInterval
+      };
       this.client = options.client;
       this.createDb();
+
+      if (this.expired.clear) {
+        this.startInterval();
+      }
+    }
+
+    startInterval() {
+      setInterval(
+        this.clearExpiredSessions.bind(this),
+        this.expired.intervalMs
+      );
+    }
+
+    clearExpiredSessions() {
+      let res;
+
+      try {
+        this.client
+          .prepare(
+            `
+        DELETE FROM ${tableName} WHERE datetime('now') > datetime(expire)
+      `
+          )
+          .run();
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     createDb() {
