@@ -40,6 +40,17 @@ app.use(
 
 See [License](./LICENSE).
 
+## Changelog
+
+### 0.0.2
+
+- Bug fix: For almost all Store methods, when an error was caught, their
+  execution wasn't stopped with e.g. a `return` statement
+
+### 0.0.1
+
+- Release initial version
+
 ## Inspiration
 
 To build this library, I looked at other session stores:
