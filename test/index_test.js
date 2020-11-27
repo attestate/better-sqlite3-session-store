@@ -397,3 +397,25 @@ test("if an expired session is deleted by continously deleting expired sessions"
     t.deepEqual(sess2, res);
   });
 });
+
+test("what happens when table is deleted and all methods are invoked (they should throw)", t => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+    expired: {
+      clear: true,
+      intervalMs: 3000
+    }
+  });
+  db.prepare("DROP table sessions").run();
+
+  const sid = "123";
+  // NOTE: Session expires immediately with maxAge being 1 second.
+  const sess = { cookie: { maxAge: 1 }, name: "instant expire" };
+  s.set(sid, sess, (err, res) => t.assert(err));
+  s.get(sid, (err, res) => t.assert(err));
+  s.touch(sid, null, (err, res) => t.assert(err));
+  s.clear((err, res) => t.assert(err));
+  s.length((err, res) => t.assert(err));
+  s.destroy(sid, (err, res) => t.assert(err));
+});

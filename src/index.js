@@ -99,6 +99,7 @@ module.exports = ({ Store }) => {
           .run(entry);
       } catch (err) {
         cb(err);
+        return;
       }
 
       cb(null, res);
@@ -119,6 +120,7 @@ module.exports = ({ Store }) => {
           .get({ sid });
       } catch (err) {
         cb(err);
+        return;
       }
 
       if (res && res.sess) {
@@ -141,6 +143,7 @@ module.exports = ({ Store }) => {
           .run(sid);
       } catch (err) {
         cb(err);
+        return;
       }
 
       cb(null, res);
@@ -159,6 +162,7 @@ module.exports = ({ Store }) => {
           .get();
       } catch (err) {
         cb(err);
+        return;
       }
 
       cb(null, res.count);
@@ -171,6 +175,7 @@ module.exports = ({ Store }) => {
         res = this.client.prepare(`DELETE FROM ${tableName}`).run();
       } catch (err) {
         cb(err);
+        return;
       }
 
       cb(null, res);
@@ -197,6 +202,7 @@ module.exports = ({ Store }) => {
           .run(entry);
       } catch (err) {
         cb(err);
+        return;
       }
 
       cb(null, res);
