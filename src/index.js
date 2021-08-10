@@ -207,6 +207,24 @@ module.exports = ({ Store }) => {
 
       cb(null, res);
     }
+   
+    all(cb) {
+      let res;
+      try {
+        res = this.client
+          .prepare(
+            `
+          SELECT * FROM ${tableName}
+        `
+          )
+          .all();
+      } catch (err) {
+        cb(err);
+        return;
+      }
+
+      cb(null, res);
+    }
   }
 
   return SqliteStore;
