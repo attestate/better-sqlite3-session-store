@@ -1,5 +1,8 @@
 // @format
-const add = require("date-fns/add");
+/**
+ * @type {import('date-fns').add}
+ */
+const add = require("date-fns").add;
 
 // NOTE: 1d = 86400s
 const oneDay = 86400;
@@ -16,6 +19,9 @@ const schema = `
   )
 `;
 
+/**
+ * @type {import('./index.d')}
+ */
 module.exports = ({ Store }) => {
   class SqliteStore extends Store {
     constructor(options = {}) {
