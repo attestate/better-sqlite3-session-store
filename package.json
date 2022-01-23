@@ -8,7 +8,8 @@
     "src/**"
   ],
   "scripts": {
-    "test": "ava --verbose --serial"
+    "test": "ava --verbose --serial",
+    "test:types": "tsc --project tsconfig.json"
   },
   "repository": {
     "type": "git",
