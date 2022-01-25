@@ -45,6 +45,7 @@ See [License](./LICENSE).
 ### 0.0.3
 
 - Add TypeScript support
+- Add (optional) `all` method
 
 ### 0.0.2
 
