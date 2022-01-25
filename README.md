@@ -42,6 +42,10 @@ See [License](./LICENSE).
 
 ## Changelog
 
+### 0.0.3
+
+- Add TypeScript support
+
 ### 0.0.2
 
 - Bug fix: For almost all Store methods, when an error was caught, their
