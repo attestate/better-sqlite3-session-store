@@ -16,9 +16,6 @@ const schema = `
   )
 `;
 
-/**
- * @type {import('./index.d')}
- */
 module.exports = ({ Store }) => {
   class SqliteStore extends Store {
     constructor(options = {}) {
