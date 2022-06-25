@@ -1,6 +1,6 @@
 {
   "name": "better-sqlite3-session-store",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "A session store for express-session.",
   "main": "src/index.js",
   "scripts": {
