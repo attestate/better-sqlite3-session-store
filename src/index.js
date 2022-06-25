@@ -4,6 +4,8 @@
  */
 const add = require("date-fns").add;
 
+const noop = () => {};
+
 // NOTE: 1d = 86400s
 const oneDay = 86400;
 
@@ -35,7 +37,7 @@ module.exports = ({ Store }) => {
         clear: (options.expired && options.expired.clear) || true,
         intervalMs:
           (options.expired && options.expired.intervalMs) ||
-          clearExpiredInterval
+          clearExpiredInterval,
       };
       this.client = options.client;
       this.createDb();
@@ -72,7 +74,7 @@ module.exports = ({ Store }) => {
       this.client.exec(schema);
     }
 
-    set(sid, sess, cb) {
+    set(sid, sess, cb = noop) {
       let age;
       if (sess.cookie && sess.cookie.maxAge) {
         // NOTE: `Max-age` property in cookie is in unit seconds
@@ -111,7 +113,7 @@ module.exports = ({ Store }) => {
       cb(null, res);
     }
 
-    get(sid, cb) {
+    get(sid, cb = noop) {
       let res;
 
       try {
@@ -136,7 +138,7 @@ module.exports = ({ Store }) => {
       }
     }
 
-    destroy(sid, cb) {
+    destroy(sid, cb = noop) {
       let res;
 
       try {
@@ -148,17 +150,13 @@ module.exports = ({ Store }) => {
           )
           .run(sid);
       } catch (err) {
-        if (cb) {
-          cb(err);
-        }
+        cb(err);
         return;
       }
-      if (cb) {
-        cb(null, res);
-      }
+      cb(null, res);
     }
 
-    length(cb) {
+    length(cb = noop) {
       let res;
 
       try {
@@ -177,7 +175,7 @@ module.exports = ({ Store }) => {
       cb(null, res.count);
     }
 
-    clear(cb) {
+    clear(cb = noop) {
       let res;
 
       try {
@@ -190,7 +188,7 @@ module.exports = ({ Store }) => {
       cb(null, res);
     }
 
-    touch(sid, sess, cb) {
+    touch(sid, sess, cb = noop) {
       const entry = { sid };
       if (sess && sess.cookie && sess.cookie.expires) {
         entry.expire = new Date(sess.cookie.expires).toISOString();
@@ -216,8 +214,8 @@ module.exports = ({ Store }) => {
 
       cb(null, res);
     }
-   
-    all(cb) {
+
+    all(cb = noop) {
       let res;
       try {
         res = this.client

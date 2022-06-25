@@ -10,7 +10,7 @@ const SqliteStore = require("../src/index.js")(session);
 
 const dbName = "test.db";
 const dbOptions = {
-  verbose: console.log
+  verbose: console.log,
 };
 
 const teardown = () => {
@@ -27,10 +27,29 @@ const teardown = () => {
 
 test.afterEach(teardown);
 
-test("if initializing store works", t => {
+test("if interface methods run safely when `cb` isn't present", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
+  });
+
+  s.all();
+  s.destroy("non-existent");
+  s.clear();
+  s.length();
+  s.get("non-existent");
+
+  const sid = "123";
+  const sess = { cookie: { maxAge: 2000 }, name: "sample name" };
+  s.set(sid, sess);
+  s.touch(sid, sess);
+  t.pass();
+});
+
+test("if initializing store works", (t) => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
   });
 
   const [sid, sess, expire] = db.prepare("PRAGMA table_info (sessions)").all();
@@ -39,13 +58,13 @@ test("if initializing store works", t => {
   t.assert(expire.name === "expire" && expire.type === "TEXT");
 });
 
-test("if initialization can be run twice without any errors", t => {
+test("if initialization can be run twice without any errors", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
   const s2 = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const [sid, sess, expire] = db.prepare("PRAGMA table_info (sessions)").all();
@@ -54,14 +73,14 @@ test("if initialization can be run twice without any errors", t => {
   t.assert(expire.name === "expire" && expire.type === "TEXT");
 });
 
-test("if error is thrown when client is missing from options", t => {
+test("if error is thrown when client is missing from options", (t) => {
   t.throws(() => new SqliteStore());
 });
 
-test("if it saves a new session record", t => {
+test("if it saves a new session record", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -80,10 +99,10 @@ test("if it saves a new session record", t => {
   );
 });
 
-test("if it overwrites an already-existing session", t => {
+test("if it overwrites an already-existing session", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -115,10 +134,10 @@ test("if it overwrites an already-existing session", t => {
   );
 });
 
-test("if it saves a session with a missing maxAge too", t => {
+test("if it saves a session with a missing maxAge too", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -137,10 +156,10 @@ test("if it saves a session with a missing maxAge too", t => {
   );
 });
 
-test("if get method returns null when no session was found", t => {
+test("if get method returns null when no session was found", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   s.get("non-existent", (err, res) => {
@@ -149,10 +168,10 @@ test("if get method returns null when no session was found", t => {
   });
 });
 
-test("if an expired session is ignored when trying to get a session", async t => {
+test("if an expired session is ignored when trying to get a session", async (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -164,7 +183,7 @@ test("if an expired session is ignored when trying to get a session", async t =>
   });
 
   // NOTE: Wait 2 sec to make sure that session is expired.
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   s.get(sid, (err, res) => {
     t.assert(!err);
@@ -172,10 +191,10 @@ test("if an expired session is ignored when trying to get a session", async t =>
   });
 });
 
-test("if an active session is retrieved when calling get", t => {
+test("if an active session is retrieved when calling get", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -191,10 +210,10 @@ test("if an active session is retrieved when calling get", t => {
   });
 });
 
-test("if a session is destroyed", t => {
+test("if a session is destroyed", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -215,10 +234,10 @@ test("if a session is destroyed", t => {
   t.assert(numOfSessions === 0);
 });
 
-test("if non-existent session can be destroyed without throwing an error too", t => {
+test("if non-existent session can be destroyed without throwing an error too", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
   const sid = "123";
 
@@ -228,10 +247,10 @@ test("if non-existent session can be destroyed without throwing an error too", t
   });
 });
 
-test("if counting all sessions is possible", t => {
+test("if counting all sessions is possible", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   s.length((err, res) => {
@@ -252,10 +271,10 @@ test("if counting all sessions is possible", t => {
   });
 });
 
-test("if all sessions can be cleared", t => {
+test("if all sessions can be cleared", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -278,10 +297,10 @@ test("if all sessions can be cleared", t => {
   s.length((err, count) => t.assert(count === 0));
 });
 
-test("if session is touched when expires key is present", t => {
+test("if session is touched when expires key is present", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -302,10 +321,10 @@ test("if session is touched when expires key is present", t => {
   t.assert(new Date(res.expire).toISOString() === newExpires);
 });
 
-test("if an inactive session is ignored when touching", async t => {
+test("if an inactive session is ignored when touching", async (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -316,7 +335,7 @@ test("if an inactive session is ignored when touching", async t => {
   });
 
   // NOTE: Wait 2 sec to make sure that session is expired.
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   const newExpires = add(new Date(), { seconds: 1337 }).toISOString();
   const sess2 = { cookie: { expires: newExpires }, name: "sample name" };
@@ -329,10 +348,10 @@ test("if an inactive session is ignored when touching", async t => {
   t.assert(differenceInSeconds(new Date(), new Date(res.expire)) < 5);
 });
 
-test("that if `expires` is omitted from cookie, a default TTL is used", t => {
+test("that if `expires` is omitted from cookie, a default TTL is used", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
-    client: db
+    client: db,
   });
 
   const sid = "123";
@@ -360,14 +379,14 @@ test("that if `expires` is omitted from cookie, a default TTL is used", t => {
   );
 });
 
-test("if an expired session is deleted by continously deleting expired sessions", async t => {
+test("if an expired session is deleted by continously deleting expired sessions", async (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
     client: db,
     expired: {
       clear: true,
-      intervalMs: 3000
-    }
+      intervalMs: 3000,
+    },
   });
 
   const sid = "123";
@@ -386,7 +405,7 @@ test("if an expired session is deleted by continously deleting expired sessions"
   });
 
   // NOTE: Wait to make sure that first session is expired.
-  await new Promise(resolve => setTimeout(resolve, 4000));
+  await new Promise((resolve) => setTimeout(resolve, 4000));
 
   s.get(sid, (err, res) => {
     t.assert(!err);
@@ -398,14 +417,14 @@ test("if an expired session is deleted by continously deleting expired sessions"
   });
 });
 
-test("what happens when table is deleted and all methods are invoked (they should throw)", t => {
+test("what happens when table is deleted and all methods are invoked (they should throw)", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
     client: db,
     expired: {
       clear: true,
-      intervalMs: 3000
-    }
+      intervalMs: 3000,
+    },
   });
   db.prepare("DROP table sessions").run();
 
