@@ -1,13 +1,8 @@
 // @format
-/**
- * @type {import('date-fns').add}
- */
-const add = require("date-fns").add;
-
 const noop = () => {};
 
-// NOTE: 1d = 86400s
-const oneDay = 86400;
+// NOTE: 1d = 86400s = 86400000ms
+const oneDay = 86400000;
 
 // NOTE: In Milliseconds
 const clearExpiredInterval = 900000;
@@ -76,17 +71,16 @@ module.exports = ({ Store }) => {
 
     set(sid, sess, cb = noop) {
       let age;
+      // NOTE: Express's temporal unit of choice is milliseconds:
+      // http://expressjs.com/en/resources/middleware/session.html#:~:text=cookie.maxAge
       if (sess.cookie && sess.cookie.maxAge) {
-        // NOTE: `Max-age` property in cookie is in unit seconds
         age = sess.cookie.maxAge;
       } else {
-        // NOTE: In cases `Max-age` is not set on a cookie, we set expire to
-        // one day in the future.
         age = oneDay;
       }
 
-      const now = new Date();
-      const expire = add(now, { seconds: age }).toISOString();
+      const now = new Date().getTime();
+      const expire = new Date(now + age).toISOString();
       const entry = { sid, sess: JSON.stringify(sess), expire };
 
       let res;
@@ -193,7 +187,8 @@ module.exports = ({ Store }) => {
       if (sess && sess.cookie && sess.cookie.expires) {
         entry.expire = new Date(sess.cookie.expires).toISOString();
       } else {
-        entry.expire = add(new Date(), { seconds: oneDay }).toISOString();
+        const now = new Date().getTime();
+        entry.expire = new Date(now + oneDay).toISOString();
       }
 
       let res;

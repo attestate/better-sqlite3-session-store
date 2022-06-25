@@ -84,7 +84,7 @@ test("if it saves a new session record", (t) => {
   });
 
   const sid = "123";
-  const sess = { cookie: { maxAge: 2000 }, name: "sample name" };
+  const sess = { cookie: { maxAge: 5000 }, name: "sample name" };
   s.set(sid, sess, (err, rows) => {
     t.assert(!err);
     t.assert(rows);
@@ -93,10 +93,8 @@ test("if it saves a new session record", (t) => {
   const dbSess = db.prepare("SELECT * FROM sessions WHERE sid = ?").get(sid);
   t.assert(dbSess.sess === JSON.stringify(sess));
   t.assert(dbSess.sid === sid);
-  t.assert(
-    differenceInSeconds(new Date(dbSess.expire), new Date()) >=
-      sess.cookie.maxAge - 5
-  );
+  const diff = differenceInSeconds(new Date(dbSess.expire), new Date());
+  t.assert(diff * 1000 >= sess.cookie.maxAge - 1000);
 });
 
 test("if it overwrites an already-existing session", (t) => {
@@ -115,10 +113,6 @@ test("if it overwrites an already-existing session", (t) => {
   const dbSess = db.prepare("SELECT * FROM sessions WHERE sid = ?").get(sid);
   t.assert(dbSess.sess === JSON.stringify(sess));
   t.assert(dbSess.sid === sid);
-  t.assert(
-    differenceInSeconds(new Date(dbSess.expire), new Date()) >=
-      sess.cookie.maxAge - 5
-  );
 
   const sess2 = { cookie: { maxAge: 5000 }, name: "replaced name" };
   s.set(sid, sess2, (err, rows) => {
@@ -128,10 +122,6 @@ test("if it overwrites an already-existing session", (t) => {
   const dbSess2 = db.prepare("SELECT * FROM sessions WHERE sid = ?").get(sid);
   t.assert(dbSess2.sess === JSON.stringify(sess2));
   t.assert(dbSess2.sid === sid);
-  t.assert(
-    differenceInSeconds(new Date(dbSess2.expire), new Date()) >=
-      sess2.cookie.maxAge - 5
-  );
 });
 
 test("if it saves a session with a missing maxAge too", (t) => {
@@ -198,7 +188,7 @@ test("if an active session is retrieved when calling get", (t) => {
   });
 
   const sid = "123";
-  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  const sess = { cookie: { maxAge: 100 * 1000 }, name: "sample name" };
   s.set(sid, sess, (err, res) => {
     t.assert(!err);
     t.assert(res);
@@ -304,7 +294,7 @@ test("if session is touched when expires key is present", (t) => {
   });
 
   const sid = "123";
-  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  const sess = { cookie: { maxAge: 100 * 1000 }, name: "sample name" };
   s.set(sid, sess, (err, res) => {
     t.assert(!err);
     t.assert(res);
@@ -328,7 +318,7 @@ test("if an inactive session is ignored when touching", async (t) => {
   });
 
   const sid = "123";
-  const sess = { cookie: { maxAge: 1 }, name: "sample name" };
+  const sess = { cookie: { maxAge: 1 * 1000 }, name: "sample name" };
   s.set(sid, sess, (err, res) => {
     t.assert(!err);
     t.assert(res);
@@ -355,7 +345,7 @@ test("that if `expires` is omitted from cookie, a default TTL is used", (t) => {
   });
 
   const sid = "123";
-  const sess = { cookie: { maxAge: 100 }, name: "sample name" };
+  const sess = { cookie: { maxAge: 100 * 1000 }, name: "sample name" };
   s.set(sid, sess, (err, res) => {
     t.assert(!err);
     t.assert(res);
@@ -391,14 +381,14 @@ test("if an expired session is deleted by continously deleting expired sessions"
 
   const sid = "123";
   // NOTE: Session expires immediately with maxAge being 1 second.
-  const sess = { cookie: { maxAge: 1 }, name: "instant expire" };
+  const sess = { cookie: { maxAge: 1 * 1000 }, name: "instant expire" };
   s.set(sid, sess, (err, res) => {
     t.assert(!err);
     t.assert(res);
   });
 
   const sid2 = "456";
-  const sess2 = { cookie: { maxAge: 100 }, name: "long expire" };
+  const sess2 = { cookie: { maxAge: 100 * 1000 }, name: "long expire" };
   s.set(sid2, sess2, (err, res) => {
     t.assert(!err);
     t.assert(res);
