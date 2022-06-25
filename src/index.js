@@ -148,11 +148,14 @@ module.exports = ({ Store }) => {
           )
           .run(sid);
       } catch (err) {
-        cb(err);
+        if (cb) {
+          cb(err);
+        }
         return;
       }
-
-      cb(null, res);
+      if (cb) {
+        cb(null, res);
+      }
     }
 
     length(cb) {
