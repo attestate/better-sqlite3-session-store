@@ -42,6 +42,12 @@ See [License](./LICENSE).
 
 ## Changelog
 
+### 0.1.0
+
+- Use correct temporal unit for express's `cookie.maxAge` (it's milliseconds)
+- Make calling `cb` function parameter safe
+  - (breaking) Remove TypeScript support
+
 ### 0.0.3
 
 - Add TypeScript support
