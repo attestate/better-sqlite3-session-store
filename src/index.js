@@ -46,7 +46,7 @@ module.exports = ({ Store }) => {
         this.clearExpiredSessions.bind(this),
         this.expired.intervalMs
       );
-      if (this.expired.unrefTimeout) {
+      if (this.expired.unrefInterval) {
         timeout.unref();
       }
     }
