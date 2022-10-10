@@ -30,6 +30,8 @@ module.exports = ({ Store }) => {
         intervalMs:
           (options.expired && options.expired.intervalMs) ||
           clearExpiredInterval,
+        unrefInterval: (options.expired && options.expired.unrefInterval) ||
+          false, 
       };
       this.client = options.client;
       this.createDb();
@@ -40,10 +42,13 @@ module.exports = ({ Store }) => {
     }
 
     startInterval() {
-      setInterval(
+      const timeout = setInterval(
         this.clearExpiredSessions.bind(this),
         this.expired.intervalMs
       );
+      if (this.expired.unrefTimeout) {
+        timeout.unref();
+      }
     }
 
     clearExpiredSessions() {
