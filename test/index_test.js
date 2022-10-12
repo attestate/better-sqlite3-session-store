@@ -146,7 +146,7 @@ test("if it saves a session with a missing maxAge too", (t) => {
   );
 });
 
-test("if it saves a session with expires value (as Date object) set instead of maxAge", async (t) => {
+test("if it saves a session with expires value (as Date object) set instead of maxAge", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
     client: db,
