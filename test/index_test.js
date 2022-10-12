@@ -146,6 +146,84 @@ test("if it saves a session with a missing maxAge too", (t) => {
   );
 });
 
+test("if it saves a session with expires value (as Date object) set instead of maxAge", async (t) => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+  });
+
+  const sid = "123";
+  const ttlSeconds = 5;
+  const expires = new Date();
+  expires.setSeconds(expires.getSeconds() + ttlSeconds);
+  const sess = { cookie: { expires }, name: "sample name" };
+  s.set(sid, sess, (err, rows) => {
+    t.assert(!err);
+    t.assert(rows);
+  });
+
+  const dbSess = db.prepare("SELECT * FROM sessions WHERE sid = ?").get(sid);
+  t.assert(dbSess.sess === JSON.stringify(sess));
+  t.assert(dbSess.sid === sid);
+
+  const diff = differenceInSeconds(new Date(dbSess.expire), new Date());
+  t.assert(diff >= ttlSeconds - 1 && diff <= ttlSeconds);
+});
+
+test("if it saves a session with expires value (as date string) set instead of maxAge", (t) => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+  });
+
+  const sid = "123";
+  const ttlSeconds = 5;
+  const expires = new Date();
+  expires.setSeconds(expires.getSeconds() + ttlSeconds);
+  const sess = {
+    cookie: { expires: expires.toISOString() },
+    name: "sample name",
+  };
+  s.set(sid, sess, (err, rows) => {
+    t.assert(!err);
+    t.assert(rows);
+  });
+
+  const dbSess = db.prepare("SELECT * FROM sessions WHERE sid = ?").get(sid);
+  t.assert(dbSess.sess === JSON.stringify(sess));
+  t.assert(dbSess.sid === sid);
+
+  const diff = differenceInSeconds(new Date(dbSess.expire), new Date());
+  t.assert(diff >= ttlSeconds - 1 && diff <= ttlSeconds);
+});
+
+test("if the maxAge value takes precedence over the expires value", (t) => {
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+  });
+
+  const sid = "123";
+  const ttlSeconds = 5;
+  const expires = new Date();
+  expires.setSeconds(expires.getSeconds() + ttlSeconds);
+  const sess = {
+    cookie: { expires, maxAge: ttlSeconds * 1000 * 2 },
+    name: "sample name",
+  };
+  s.set(sid, sess, (err, rows) => {
+    t.assert(!err);
+    t.assert(rows);
+  });
+
+  const dbSess = db.prepare("SELECT * FROM sessions WHERE sid = ?").get(sid);
+  t.assert(dbSess.sess === JSON.stringify(sess));
+  t.assert(dbSess.sid === sid);
+
+  const diff = differenceInSeconds(new Date(dbSess.expire), new Date());
+  t.assert(diff >= 2 * ttlSeconds - 1 && diff <= 2 * ttlSeconds);
+});
+
 test("if get method returns null when no session was found", (t) => {
   const db = new sqlite(dbName, dbOptions);
   const s = new SqliteStore({
