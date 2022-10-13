@@ -26,9 +26,9 @@
   },
   "homepage": "https://github.com/TimDaub/better-sqlite3-session-store#readme",
   "devDependencies": {
-    "ava": "^4.3.3",
-    "better-sqlite3": "^7.6.2",
-    "date-fns": "^2.29.3",
-    "express-session": "^1.17.3"
+    "ava": "3.13.0",
+    "better-sqlite3": "7.1.1",
+    "date-fns": "2.16.1",
+    "express-session": "1.17.1"
   }
 }
