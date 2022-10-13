@@ -5,7 +5,7 @@ const session = require("express-session");
 const { unlinkSync, existsSync } = require("fs");
 const differenceInSeconds = require("date-fns/differenceInSeconds");
 const add = require("date-fns/add");
-const async_hooks = require("node:async_hooks");
+const async_hooks = require("async_hooks");
 
 const SqliteStore = require("../src/index.js")(session);
 
