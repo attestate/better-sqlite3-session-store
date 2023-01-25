@@ -67,17 +67,23 @@ module.exports = ({ Store }) => {
     }
 
     set(sid, sess, cb = noop) {
-      let age;
       // NOTE: Express's temporal unit of choice is milliseconds:
       // http://expressjs.com/en/resources/middleware/session.html#:~:text=cookie.maxAge
+      const now = new Date().getTime();
+      let expire;
+
+      // MaxAge takes precedence over Expires
       if (sess.cookie && sess.cookie.maxAge) {
-        age = sess.cookie.maxAge;
+        expire = new Date(now + sess.cookie.maxAge).toISOString();
+      } else if (sess.cookie && sess.cookie.expires) {
+        expire =
+          typeof sess.cookie.expires === "object"
+            ? sess.cookie.expires.toISOString()
+            : new Date(sess.cookie.expires).toISOString();
       } else {
-        age = oneDay;
+        expire = new Date(now + oneDay).toISOString();
       }
 
-      const now = new Date().getTime();
-      const expire = new Date(now + age).toISOString();
       const entry = { sid, sess: JSON.stringify(sess), expire };
 
       let res;
