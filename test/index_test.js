@@ -5,6 +5,7 @@ const session = require("express-session");
 const { unlinkSync, existsSync } = require("fs");
 const differenceInSeconds = require("date-fns/differenceInSeconds");
 const add = require("date-fns/add");
+const async_hooks = require("async_hooks");
 
 const SqliteStore = require("../src/index.js")(session);
 
@@ -427,4 +428,66 @@ test("what happens when table is deleted and all methods are invoked (they shoul
   s.clear((err, res) => t.assert(err));
   s.length((err, res) => t.assert(err));
   s.destroy(sid, (err, res) => t.assert(err));
+});
+
+function getSymbolValue(obj, symbol) {
+  const refedSymbol = Object.getOwnPropertySymbols(obj).find(
+    (s) => s.toString() === symbol
+  );
+  return obj[refedSymbol];
+}
+
+test("if the expiration interval continues being referenced", async (t) => {
+  const timeoutMs = 555;
+  let loggedResource;
+
+  function init(asyncId, type, triggerAsyncId, resource) {
+    if (type === "Timeout" && resource._idleTimeout === timeoutMs) {
+      loggedResource = resource;
+      t.assert(getSymbolValue(loggedResource, "Symbol(refed)"));
+    }
+  }
+  const asyncHook = async_hooks.createHook({
+    init,
+  });
+  asyncHook.enable();
+
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+    expired: {
+      clear: true,
+      intervalMs: timeoutMs,
+    },
+  });
+
+  t.assert(getSymbolValue(loggedResource, "Symbol(refed)"));
+});
+
+test("if the expiration interval is going to be unreferenced", async (t) => {
+  const timeoutMs = 555;
+  let loggedResource;
+
+  function init(asyncId, type, triggerAsyncId, resource) {
+    if (type === "Timeout" && resource._idleTimeout === timeoutMs) {
+      loggedResource = resource;
+      t.assert(getSymbolValue(loggedResource, "Symbol(refed)"));
+    }
+  }
+  const asyncHook = async_hooks.createHook({
+    init,
+  });
+  asyncHook.enable();
+
+  const db = new sqlite(dbName, dbOptions);
+  const s = new SqliteStore({
+    client: db,
+    expired: {
+      clear: true,
+      intervalMs: timeoutMs,
+      unrefInterval: true,
+    },
+  });
+
+  t.assert(!getSymbolValue(loggedResource, "Symbol(refed)"));
 });
